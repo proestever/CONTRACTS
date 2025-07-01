@@ -18,7 +18,6 @@
 // SPDX-License-Identifier: MIT
 // Buy & Burn + Reward Token
 
-*/
 pragma solidity 0.8.21;
 
 abstract contract Context {
