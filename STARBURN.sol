@@ -530,7 +530,7 @@ contract STAR is ERC20, Ownable {
 
     uint8 constant _decimals = 9;
     uint256 constant _decimalFactor = 10 ** _decimals;
-    address constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD; // Dead address for "burns"
+    address constant DEAD_ADDRESS = 0x0000000000000000000000000000000000000000; // Dead address for "burns"
 
     bool private swapping;
     uint256 public swapTokensAtAmount;
