@@ -542,7 +542,7 @@ interface IDexFactory {
     function createPair(address tokenA, address tokenB) external returns (address pair);
 }
 
-contract STAR is ERC20, Ownable {
+contract GODSWORD is ERC20, Ownable {
     IDexRouter public immutable dexRouter;
     address public lpPair;
     mapping(address => uint256) public walletProtection;
