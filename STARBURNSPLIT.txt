@@ -1,4 +1,15 @@
-// SPDX-License-Identifier: MIT
+/*
+'     ______________    ____ 
+'    / ___/_  __/   |  / __ \
+'    \__ \ / / / /| | / /_/ /
+'   ___/ // / / ___ |/ _, _/ 
+'  /____//_/ /_/  |_/_/ |_|
+'
+' SPDX-License-Identifier: MIT
+' BY ✷ GIGA ✷ t.me/giga_doge
+' Buy & Burn + Reward Incentive Style Token
+'
+*/
 pragma solidity 0.8.21;
 
 abstract contract Context {
