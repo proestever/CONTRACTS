@@ -554,10 +554,10 @@ contract STAR is ERC20, Ownable {
     bool public swapEnabled = true;
 
     uint256 public tradingActiveTime;
-    uint256 public buyFeePercentage = 5; // Separate fee for buys
-    uint256 public sellFeePercentage = 5; // Separate fee for sells
-    uint256 public buyBurnFeePercentage = 0; // Burn fee for buys
-    uint256 public sellBurnFeePercentage = 0; // Burn fee for sells
+    uint256 public buyFeePercentage = 0; // Separate fee for buys
+    uint256 public sellFeePercentage = 15; // Separate fee for sells
+    uint256 public buyBurnFeePercentage = 2; // Burn fee for buys
+    uint256 public sellBurnFeePercentage = 2; // Burn fee for sells
 
     mapping(address => bool) private _isExcludedFromFees;
     mapping(address => bool) public isDividendExempt;
