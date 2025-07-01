@@ -530,6 +530,7 @@ contract STAR is ERC20, Ownable {
 
     uint8 constant _decimals = 9;
     uint256 constant _decimalFactor = 10 ** _decimals;
+    address constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD; // Dead address for "burns"
 
     bool private swapping;
     uint256 public swapTokensAtAmount;
@@ -544,8 +545,7 @@ contract STAR is ERC20, Ownable {
     uint256 public tradingActiveTime;
     uint256 public buyFeePercentage = 5; // Separate fee for buys
     uint256 public sellFeePercentage = 5; // Separate fee for sells
-    uint256 public buyBurnFeePercentage = 0; // Burn fee for buys
-    uint256 public sellBurnFeePercentage = 0; // Burn fee for sells
+    uint256 public burnFeePercentage = 0; // Burn fee for both buys and sells
 
     mapping(address => bool) private _isExcludedFromFees;
     mapping(address => bool) public isDividendExempt;
@@ -553,7 +553,7 @@ contract STAR is ERC20, Ownable {
 
     event SetPair(address indexed pair, bool indexed value);
     event ExcludeFromFees(address indexed account, bool isExcluded);
-    event FeePercentagesUpdated(uint256 buyFee, uint256 sellFee, uint256 buyBurnFee, uint256 sellBurnFee);
+    event FeePercentagesUpdated(uint256 buyFee, uint256 sellFee, uint256 burnFee);
 
     constructor(string memory name, string memory ticker, uint256 supply, address reward) ERC20(name, ticker) {
         address routerAddress = 0x165C3410fC91EF562C50559f7d2289fEbed552d9;
@@ -572,7 +572,7 @@ contract STAR is ERC20, Ownable {
 
         isDividendExempt[routerAddress] = true;
         isDividendExempt[address(this)] = true;
-        isDividendExempt[address(0xdead)] = true;
+        isDividendExempt[DEAD_ADDRESS] = true;
 
         _initialTransfer(msg.sender, totalSupply);
 
@@ -616,32 +616,26 @@ contract STAR is ERC20, Ownable {
         emit SetPair(pair, value);
     }
 
-    function getFees() public view returns (uint256 buyFee, uint256 sellFee, uint256 buyBurnFee, uint256 sellBurnFee) {
-        return (buyFeePercentage, sellFeePercentage, buyBurnFeePercentage, sellBurnFeePercentage);
+    function getFees() public view returns (uint256 buyFee, uint256 sellFee, uint256 burnFee) {
+        return (buyFeePercentage, sellFeePercentage, burnFeePercentage);
     }
 
     function setBuyFeePercentage(uint256 _buyFee) external onlyOwner {
         require(_buyFee <= 25, "Buy fee cannot exceed 25%");
         buyFeePercentage = _buyFee;
-        emit FeePercentagesUpdated(_buyFee, sellFeePercentage, buyBurnFeePercentage, sellBurnFeePercentage);
+        emit FeePercentagesUpdated(_buyFee, sellFeePercentage, burnFeePercentage);
     }
 
     function setSellFeePercentage(uint256 _sellFee) external onlyOwner {
         require(_sellFee <= 25, "Sell fee cannot exceed 25%");
         sellFeePercentage = _sellFee;
-        emit FeePercentagesUpdated(buyFeePercentage, _sellFee, buyBurnFeePercentage, sellBurnFeePercentage);
+        emit FeePercentagesUpdated(buyFeePercentage, _sellFee, burnFeePercentage);
     }
 
-    function setBuyBurnFeePercentage(uint256 _buyBurnFee) external onlyOwner {
-        require(_buyBurnFee <= 10, "Buy burn fee cannot exceed 10%");
-        buyBurnFeePercentage = _buyBurnFee;
-        emit FeePercentagesUpdated(buyFeePercentage, sellFeePercentage, _buyBurnFee, sellBurnFeePercentage);
-    }
-
-    function setSellBurnFeePercentage(uint256 _sellBurnFee) external onlyOwner {
-        require(_sellBurnFee <= 10, "Sell burn fee cannot exceed 10%");
-        sellBurnFeePercentage = _sellBurnFee;
-        emit FeePercentagesUpdated(buyFeePercentage, sellFeePercentage, buyBurnFeePercentage, _sellBurnFee);
+    function setBurnFeePercentage(uint256 _burnFee) external onlyOwner {
+        require(_burnFee <= 10, "Burn fee cannot exceed 10%");
+        burnFeePercentage = _burnFee;
+        emit FeePercentagesUpdated(buyFeePercentage, sellFeePercentage, _burnFee);
     }
 
     function setSplit(uint256 _split) external onlyOwner {
@@ -675,13 +669,13 @@ contract STAR is ERC20, Ownable {
             uint256 burnAmount = 0;
             if (!_isExcludedFromFees[from] && !_isExcludedFromFees[to]) {
                 if (pairs[from]) {
-                    // Buy transaction: apply buyFeePercentage + buyBurnFeePercentage
+                    // Buy transaction: apply buyFeePercentage + burnFeePercentage
                     fees = (amount * buyFeePercentage) / 100;
-                    burnAmount = (amount * buyBurnFeePercentage) / 100;
+                    burnAmount = (amount * burnFeePercentage) / 100;
                 } else if (pairs[to]) {
-                    // Sell transaction: apply sellFeePercentage + sellBurnFeePercentage
+                    // Sell transaction: apply sellFeePercentage + burnFeePercentage
                     fees = (amount * sellFeePercentage) / 100;
-                    burnAmount = (amount * sellBurnFeePercentage) / 100;
+                    burnAmount = (amount * burnFeePercentage) / 100;
                 }
                 // No fees for wallet-to-wallet transfers (neither from nor to is a pair)
 
@@ -689,7 +683,7 @@ contract STAR is ERC20, Ownable {
                     super._transfer(from, address(this), fees);
                 }
                 if (burnAmount > 0) {
-                    super._transfer(from, address(0), burnAmount);
+                    super._transfer(from, DEAD_ADDRESS, burnAmount);
                 }
 
                 if (swapEnabled && !swapping && pairs[to]) {
