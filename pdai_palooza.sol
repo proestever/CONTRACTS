@@ -243,7 +243,7 @@ contract DividendDistributor is IDividendDistributor, Ownable {
     uint256 public gas = 800000;
     uint256 public currentIndex;
     
-    uint256 public minTokensForDividends = 1000000 * 10**9;
+    uint256 public minTokensForDividends = 100000 * 10**9;
 
     address constant routerAddress = 0x165C3410fC91EF562C50559f7d2289fEbed552d9;
     IDexRouter constant dexRouter = IDexRouter(routerAddress);
